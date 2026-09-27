@@ -436,6 +436,20 @@ def lit(img, heat, rim_col, silhouette=0.0):
     return out
 
 
+_WHITE_HAIR = np.array([_c(MC.PAL[k]) for k in '7890'], np.float32)
+
+
+def white_hair_layer(img, heat):
+    """魔人化的白发：只带一点暖光。整体暖色调（lit + warm_grade）会把白发染成金黄，调色之后再把头发盖回去。"""
+    rgb, a = img[..., :3], img[..., 3] > 0
+    d = np.abs(rgb[:, :, None, :] - _WHITE_HAIR[None, None]).max(-1).min(-1)
+    m = a & (d < 0.02)
+    out = np.zeros_like(img)
+    out[m, :3] = np.clip(rgb[m] * np.array([1.0, 1 - 0.03 * heat, 1 - 0.12 * heat], np.float32), 0, 1)
+    out[m, 3] = 1.0
+    return out
+
+
 # 姿势时间表（本段内拍数 B = lt / beat）
 WALK = ['walk0', 'walk1', 'walk2', 'walk3']
 WALK_END, WALK_SPEED = 5.5, 33.0          # 走 5.5 拍（6 步，接地落在 1.0 … 2.1），每拍 33px
@@ -771,6 +785,7 @@ def render(dst, ctx):
     silh = 0.8 * smooth(19.6, 20.4, B)
     rim = LAVA[3] if B < 16 else LAVA[4]
     spr = lit(body_img(pose), heat, rim, silh)
+    hair = white_hair_layer(body_img(pose), heat) if silh < 0.05 else None
     ox_, oy_ = sprite_origin(x, bob + low)
     sw = blade_screen(pose, x, bob + low, reveal) if pose in MC.BLADE else None
     if sw is not None:
@@ -870,6 +885,8 @@ def render(dst, ctx):
     dst[:] = dst * (1 - a) + f[..., :3] * a
 
     dst = warm_grade(dst, heat, t)
+    if hair is not None:
+        blit(dst, hair, ox_, oy_, scale=2)
 
     # ---- 命中：反色冲击帧（2 帧），纯黑底 + 白色人物 / 剑 / 拖尾
     if T_HIT <= B < T_HIT + 2 / 30.0 / beat:
