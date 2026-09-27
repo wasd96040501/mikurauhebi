@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+preview/
+out/
+.DS_Store
+refs/
+.claude/

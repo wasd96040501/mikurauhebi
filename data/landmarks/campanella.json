@@ -1,0 +1,34 @@
+{
+  "_classes": {"skin": ["PAL.s", "PAL.k", "PAL.K"], "hair": ["PAL.H", "PAL.h", "PAL.g", "PAL.d"],
+               "eyes": ["PAL.W", "PAL.R", "PAL.r", "PAL.q"],
+               "cloth1": ["PAL.J", "PAL.j", "PAL.i", "PAL.I"],
+               "cloth2": ["PAL.L", "PAL.l", "PAL.m", "PAL.T", "PAL.t", "PAL.B", "PAL.b", "PAL.n", "PAL.G", "PAL.Y"]},
+  "bust": {
+    "_anchors": {"eye_near": [284, 197]},
+    "_note": "SC Evo 半身像，朝画面左 3/4。近侧眼（角色左眼）被刘海盖住，只标远侧眼；brow_near 被遮不标；jaw_near 取刘海边缘处可见的下颌线端点",
+    "head_top": [272, 72], "chin": [259, 275],
+    "eye_far_out": [206, 182], "eye_far_in": [235, 191], "eye_far_top": [225, 181], "eye_far_bot": [225, 201],
+    "nose": [251, 233], "mouth": [260, 246],
+    "cheek_far": [206, 202], "jaw_far": [219, 246], "jaw_near": [312, 242],
+    "neck_far": [248, 278], "neck_near": [312, 274],
+    "x_mark": [222, 214],
+    "x_hair_top": [268, 48], "x_hair_far": [167, 153], "x_hair_near_tip": [415, 185],
+    "x_lock_far_tip": [223, 315], "x_lock_near_tip": [303, 315],
+    "x_collar_tip_far": [238, 334], "x_collar_tip_near": [293, 335],
+    "x_trim_far": [198, 318], "x_trim_near": [385, 317]
+  },
+  "full": {
+    "_note": "Sen III 立绘。角色右手（画面左）屈肘托在胸前，左手（画面右）向右下伸开；双腿前后交叉，右腿在前",
+    "head_top": [554, 157], "chin": [608, 542], "neck": [588, 598],
+    "shoulder_r": [372, 625], "shoulder_l": [900, 650],
+    "elbow_r": [55, 1000], "elbow_l": [1060, 1090],
+    "wrist_r": [420, 1060], "wrist_l": [1236, 1445],
+    "waist": [545, 1240], "crotch": [540, 1790],
+    "knee_r": [545, 2330], "knee_l": [700, 2300],
+    "ankle_r": [515, 2945], "ankle_l": [690, 2855],
+    "x_lapel_r": [381, 791], "x_lapel_bot": [431, 871], "x_lapel_l": [706, 846],
+    "x_hem_r_side": [231, 1483], "x_hem_r_tip": [341, 1638], "x_hem_l_tip": [616, 1686], "x_hem_l_side": [841, 1476],
+    "x_shirt_r_tip": [351, 1746], "x_shirt_l_tip": [631, 1781],
+    "x_fingers_r": [681, 1056], "x_fingers_l": [1300, 1700]
+  }
+}
