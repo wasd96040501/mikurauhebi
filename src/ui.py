@@ -96,10 +96,19 @@ def subtitle(dst, line, lt, y=238, cps=16, zh_col='#f2eefa', ja_col='#9a8cb8', b
     ref = line[2] if len(line) > 2 else len(tr)
     frac = lt * cps / max(1, ref)
     y += leave ** 2 * 60
+    rows = wrap(tr, W - 48)                  # 太长就折成两行（两行尽量等长），往上长；日文位置不变
+    if len(rows) == 2 and ' ' in tr:
+        ws = tr.split(' ')
+        k = min(range(1, len(ws)), key=lambda i: max(text_mask(' '.join(ws[:i])).shape[1], text_mask(' '.join(ws[i:])).shape[1]))
+        rows = [' '.join(ws[:k]), ' '.join(ws[k:])]
+    top = y - 13 * (len(rows) - 1)
     if box:
         a = 0.6 * ease_out(lt / 0.2)
-        rect(dst, 0, y - 14, W, y + 30, hexc('#06030a'), a)
-    text(dst, tr, W / 2, y, hexc(zh_col), reveal=frac * len(tr))
+        rect(dst, 0, top - 14, W, y + 30, hexc('#06030a'), a)
+    n = frac * len(tr)
+    for i, row in enumerate(rows):
+        text(dst, row, W / 2, top + 13 * i, hexc(zh_col), reveal=n)
+        n -= len(row) + (1 if ' ' in row else 0)
     text(dst, ja, W / 2, y + 18, hexc(ja_col), reveal=frac * len(ja), font='ja')
 
 
