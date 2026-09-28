@@ -53,6 +53,7 @@ from gfx import H, W, DoomFire, Particles, blit, canvas, clamp01, dither_mask, f
 import lines
 import story
 import ui
+import vertical
 
 ROOT = Path(__file__).resolve().parent.parent
 C = {k: cast.get(k) for k in cast.ORDER}
@@ -215,6 +216,7 @@ class Director:
         if dst is None:
             raise RuntimeError(f'scenes.{sec.name}.render 没有返回画布')
         dst = np.ascontiguousarray(dst, np.float32)
+        self.says = []
         lb = getattr(self.mod, 'LETTERBOX', 0)
         if lb:
             dst[:lb] = 0
@@ -226,7 +228,10 @@ class Director:
             left = ctx.at(*end) - ctx.lt                            # 距离收起还有多少秒
             if lt >= 0 and left > -0.15:
                 leave = clamp01(-left / 0.15)
-                if style == 'dialog':
+                if vertical.VERTICAL:              # 竖屏版：台词挪到画面下方（vertical.compose 画）
+                    who = key.split('_')[0]
+                    self.says.append((style, C[who] if who in C else C['campanella'], lines.get(key), lt, leave))
+                elif style == 'dialog':
                     who = key.split('_')[0]
                     ui.dialog(dst, C[who] if who in C else C['campanella'], lines.get(key), lt, leave=leave)
                 else:
@@ -236,7 +241,7 @@ class Director:
         for when, col, dur, strength in self.flashes:
             if when <= t < when + dur:
                 fade(dst, col, (1 - (t - when) / dur) * strength)
-        if t > story.DURATION - 0.8:
+        if t > story.DURATION - 0.8 and not vertical.VERTICAL:
             fade(dst, hexc('#000000'), smooth(story.DURATION - 0.8, story.DURATION - 0.1, t))
         amp = 0.0
         for when, a, dur in self.shakes:
@@ -246,6 +251,8 @@ class Director:
             dx, dy = self.rng.integers(-int(amp), int(amp) + 1, 2)
             dst = np.roll(np.roll(dst, dy, 0), dx, 1)
         ctx.prev_lt = ctx.lt
+        if vertical.VERTICAL:
+            dst = vertical.compose(dst, self.says, t)
         return dst
 
     def _transition(self, dst, t, sec):
@@ -297,7 +304,8 @@ def _frames(sections=None):
 def run_video(out, sections=None):
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    cmd = ['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W * 4}x{H * 4}',
+    fw, fh = (vertical.VW, vertical.VH) if vertical.VERTICAL else (W, H)
+    cmd = ['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{fw * 4}x{fh * 4}',
            '-r', str(story.FPS), '-i', '-']
     wav = ROOT / 'out' / 'soundtrack.wav'
     if sections and wav.exists():   # 分段预览时带上对应的声音
@@ -307,6 +315,8 @@ def run_video(out, sections=None):
     cmd += ['-c:v', 'libx264', '-preset', 'veryslow' if not sections else 'fast', '-crf', '20' if not sections else '16',
             '-tune', 'animation',
             '-pix_fmt', 'yuv420p', str(out)]
+    if vertical.VERTICAL:       # 4 倍的 1920x3416 缩到 1080x1920
+        cmd[-3:-3] = ['-vf', 'scale=1080:1920:flags=lanczos']
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     d = Director()
     for k, (i, t) in enumerate(_frames(sections)):

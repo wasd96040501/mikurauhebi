@@ -85,21 +85,26 @@ def blit(dst, img, x, y, scale=1, flip=False, alpha=1.0, tint=None, tint_amt=0.0
     reg[:] = reg * (1 - a) + rgb * a
 
 
-def dither_mask(level):
+@lru_cache(None)
+def bayer(h, w):
+    return np.tile(BAYER4, (h // 4 + 1, w // 4 + 1))[:h, :w]
+
+
+def dither_mask(level, shape=(H, W)):
     """0..1 的覆盖率 -> Bayer 抖动布尔遮罩，做像素风的淡入淡出。"""
-    return BAYER < level
+    return bayer(*shape) < level
 
 
 def fade(dst, color, level):
     if level <= 0:
         return
-    m = dither_mask(level) if level < 1 else np.ones((H, W), bool)
+    m = dither_mask(level, dst.shape[:2]) if level < 1 else np.ones(dst.shape[:2], bool)
     dst[m] = color
 
 
 def rect(dst, x0, y0, x1, y1, color, alpha=1.0):
     x0, y0, x1, y1 = [int(round(v)) for v in (x0, y0, x1, y1)]
-    x0, y0, x1, y1 = max(0, x0), max(0, y0), min(W, x1), min(H, y1)
+    x0, y0, x1, y1 = max(0, x0), max(0, y0), min(dst.shape[1], x1), min(dst.shape[0], y1)
     if x1 > x0 and y1 > y0:
         dst[y0:y1, x0:x1] = dst[y0:y1, x0:x1] * (1 - alpha) + np.asarray(color, np.float32) * alpha
 
@@ -170,7 +175,7 @@ def text(dst, s, x, y, color, scale=1, outline=(0.02, 0.0, 0.05), anchor='center
     for mm, col, a in layers:
         ys, xs = np.nonzero(mm)
         ys, xs = ys + y0, xs + x0
-        ok = (ys >= 0) & (ys < H) & (xs >= 0) & (xs < W)
+        ok = (ys >= 0) & (ys < dst.shape[0]) & (xs >= 0) & (xs < dst.shape[1])
         dst[ys[ok], xs[ok]] = dst[ys[ok], xs[ok]] * (1 - a) + np.asarray(col, np.float32) * a
     return w
 
@@ -342,7 +347,7 @@ LEVELS = 8
 def finalize(frame, scale=4, scan=True):
     """抖动量化到有限色阶，再最近邻放大到 1080p，加一点扫描线。"""
     f = np.clip(frame, 0, 1)
-    q = np.floor(f * (LEVELS - 1) + BAYER[..., None] * 0.999) / (LEVELS - 1)
+    q = np.floor(f * (LEVELS - 1) + bayer(*f.shape[:2])[..., None] * 0.999) / (LEVELS - 1)
     q = np.clip(q, 0, 1)
     big = np.repeat(np.repeat(q, scale, 0), scale, 1)
     if scan:

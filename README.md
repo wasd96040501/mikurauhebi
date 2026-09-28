@@ -30,6 +30,8 @@ bash build.sh
 
 This takes about 4 minutes and writes `out/ouroboros_pv_zh.mp4` and `out/ouroboros_pv_en.mp4`.
 
+For a 9:16 version for phones, run `PV_LAYOUT=vertical bash build.sh`. It keeps the 16:9 picture in the middle and moves the lines below it at twice the size. It writes `out/ouroboros_pv_<lang>_vertical.mp4`.
+
 Useful commands while tinkering:
 
 ```bash
